@@ -131,7 +131,9 @@ func (m *Darkvisitors) FetchRobotsTxt(ctx caddy.Context) {
 		return
 	}
 	m.logger.Debug("Robots.txt query sent", zap.Int("status", resp.StatusCode))
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -181,8 +183,14 @@ func (m Darkvisitors) Validate() error {
 }
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
-func (m Darkvisitors) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
-	caddyhttp.SetVar(r.Context(), "dv_robots_txt", m.RobotsTxt.text)
+func (m Darkvisitors) ServeHTTP(
+	w http.ResponseWriter,
+	r *http.Request,
+	next caddyhttp.Handler,
+) error {
+	if m.RobotsTxt != nil {
+		caddyhttp.SetVar(r.Context(), "dv_robots_txt", m.RobotsTxt.text)
+	}
 
 	// run the next handler
 	err := next.ServeHTTP(w, r)
@@ -224,7 +232,9 @@ func (m Darkvisitors) ServeHTTP(w http.ResponseWriter, r *http.Request, next cad
 		} else {
 			m.logger.Debug("Visitor event sent", zap.Int("status", resp.StatusCode))
 		}
-		defer resp.Body.Close()
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 	}()
 
 	return nil
