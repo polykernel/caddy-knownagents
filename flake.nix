@@ -56,6 +56,7 @@
                 config.pre-commit.settings.package
 
                 goPackage
+                pkgs.golangci-lint
                 (buildWithSpecificGo pkgs.gotools)
                 (buildWithSpecificGo pkgs.xcaddy)
                 (buildWithSpecificGo pkgs.pkgsite)

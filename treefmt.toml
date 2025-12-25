@@ -4,6 +4,12 @@ excludes = ["vendor/*"]
 includes = ["*.go"]
 options = ["-w"]
 
+[formatter.golangci-lint]
+command = "golangci-lint"
+excludes = ["vendor/*"]
+includes = ["*.go"]
+options = ["run"]
+
 [formatter.nix]
 command = "nixfmt"
 excludes = []

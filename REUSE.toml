@@ -4,9 +4,10 @@ version = 1
 path = [
   ".editorconfig",
   ".envrc",
+  ".gitignore",
+  ".golangci.yaml",
   "treefmt.toml",
   "typos.toml",
-  ".gitignore",
   "go.mod",
   "go.sum",
   "flake.lock",
