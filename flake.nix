@@ -4,60 +4,64 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-    pre-commit-hooks.url = "github:cachix/git-hooks.nix";
+    git-hooks-nix.url = "github:cachix/git-hooks.nix?ref=master";
+    git-hooks-nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    flake-utils.url = "github:numtide/flake-utils";
+    flake-parts.url = "github:hercules-ci/flake-parts?ref=main";
   };
 
   outputs =
-    { self, nixpkgs, ... }@inputs:
-    let
-      supportedSystems = [
-        "x86_64-linux"
-        "aarch64-linux"
-      ];
+    { flake-parts, ... }@inputs:
 
-      perSystem =
-        system:
-        let
-          pkgs = import nixpkgs {
-            inherit system;
-            config = { };
-            overlays = [ ];
-          };
+    flake-parts.lib.mkFlake { inherit inputs; } (
+      top@{ config, ... }:
 
-          goPackage = pkgs.go;
-          buildGoModule = pkgs.buildGoModule.override { go = goPackage; };
-          buildWithSpecificGo = pkg: pkg.override { inherit buildGoModule; };
-        in
-        nixpkgs.lib.fix (_self: {
-          checks = {
-            pre-commit-check = inputs.pre-commit-hooks.lib.${system}.run {
-              src = ./.;
-              hooks = {
-                treefmt = {
-                  enable = true;
-                  settings.formatters = [
-                    goPackage
-                    pkgs.nixfmt-rfc-style
-                    pkgs.typos
-                    pkgs.toml-sort
-                  ];
-                };
-                reuse.enable = true;
+      {
+        imports = [
+          inputs.git-hooks-nix.flakeModule
+        ];
+
+        systems = [ "x86_64-linux" ];
+
+        perSystem =
+          {
+            config,
+            pkgs,
+            system,
+            ...
+          }:
+          let
+            goPackage = pkgs.go;
+            buildGoModule = pkgs.buildGoModule.override { go = goPackage; };
+            buildWithSpecificGo = pkg: pkg.override { inherit buildGoModule; };
+          in
+          {
+            pre-commit.settings.hooks = {
+              treefmt = {
+                enable = true;
+                settings.formatters = [
+                  (buildWithSpecificGo pkgs.gofumpt)
+                  pkgs.nixfmt-rfc-style
+                  pkgs.toml-sort
+                ];
               };
+              typos.enable = true;
+              reuse.enable = true;
+            };
+
+            devShells.default = pkgs.mkShell {
+              name = "caddy-plugin-devshell";
+              shellHook = config.pre-commit.installationScript;
+              buildInputs = config.pre-commit.settings.enabledPackages ++ [
+                config.pre-commit.settings.package
+
+                goPackage
+                (buildWithSpecificGo pkgs.gotools)
+                (buildWithSpecificGo pkgs.xcaddy)
+                (buildWithSpecificGo pkgs.pkgsite)
+              ];
             };
           };
-
-          devShells.default = pkgs.mkShell {
-            inherit (_self.checks.pre-commit-check) shellHook;
-            nativeBuildInputs = [
-              goPackage
-              (buildWithSpecificGo pkgs.xcaddy)
-              (buildWithSpecificGo pkgs.pkgsite)
-            ] ++ _self.checks.pre-commit-check.enabledPackages;
-          };
-        });
-    in
-    inputs.flake-utils.lib.eachSystem supportedSystems perSystem;
+      }
+    );
 }

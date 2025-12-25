@@ -1,5 +1,5 @@
-[formatter.gofmt]
-command = "gofmt"
+[formatter.gofumpt]
+command = "gofumpt"
 excludes = ["vendor/*"]
 includes = ["*.go"]
 options = ["-w"]
@@ -15,9 +15,3 @@ command = "toml-sort"
 excludes = []
 includes = ["*.toml"]
 options = ["-i"]
-
-[formatter.typos]
-command = "typos"
-excludes = []
-includes = ["."]
-options = []
