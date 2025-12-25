@@ -6,6 +6,7 @@ path = [
   ".envrc",
   ".gitignore",
   ".golangci.yaml",
+  "CHANGELOG.md",
   "treefmt.toml",
   "typos.toml",
   "go.mod",
