@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -104,22 +105,22 @@ func (Darkvisitors) CaddyModule() caddy.ModuleInfo {
 
 // FetchRobotsTxt queries the Dark Visitors robots.txt generation API endpoint
 // and stores the returned robots.txt content.
-func (m *Darkvisitors) FetchRobotsTxt(ctx caddy.Context) {
+func (m *Darkvisitors) FetchRobotsTxt(ctx caddy.Context) error {
 	m.logger.Info("Fetching generated robots.txt")
 
 	query, err := json.Marshal(m.RobotsTxt)
 	if err != nil {
 		m.logger.Error("Error marshaling robots.txt query", zap.Error(err))
-		return
+		return err
 	}
 
 	m.logger.Debug("Robots.txt query payload constructed", zap.ByteString("payload", query))
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest("POST", RobotsTxtEndpoint, bytes.NewBuffer(query))
 	if err != nil {
 		m.logger.Error("Error creating request", zap.Error(err))
-		return
+		return err
 	}
 
 	req.Header.Set("Authorization", "Bearer "+m.AccessToken)
@@ -128,7 +129,7 @@ func (m *Darkvisitors) FetchRobotsTxt(ctx caddy.Context) {
 	resp, err := client.Do(req)
 	if err != nil {
 		m.logger.Warn("Error sending robots.txt query", zap.Error(err))
-		return
+		return err
 	}
 	m.logger.Debug("Robots.txt query sent", zap.Int("status", resp.StatusCode))
 	defer func() {
@@ -138,9 +139,11 @@ func (m *Darkvisitors) FetchRobotsTxt(ctx caddy.Context) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		m.logger.Warn("Error reading response body", zap.Error(err))
-		return
+		return err
 	}
 	m.RobotsTxt.text = string(body)
+
+	return nil
 }
 
 // Provision implements caddy.Provisioner.
@@ -155,7 +158,10 @@ func (m *Darkvisitors) Provision(ctx caddy.Context) error {
 		if m.RobotsTxt.Disallow == "" {
 			m.RobotsTxt.Disallow = "/"
 		}
-		go m.FetchRobotsTxt(ctx)
+		err := m.FetchRobotsTxt(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
