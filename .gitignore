@@ -1,5 +1,6 @@
 # direnv
-.direnv
+.direnv/
+.envrc
 
 # pre-commit
 .pre-commit-config.yaml
