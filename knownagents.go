@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 polykernel
 // SPDX-License-Identifier: MIT or Apache-2.0
 
-package caddydarkvisitors
+package caddyknownagents
 
 import (
 	"bytes"
@@ -20,13 +20,13 @@ import (
 	"go.uber.org/zap"
 )
 
-// The address for the Dark Visitors agent analytics API endpoint.
-const AnalyticsEndpoint = "https://api.darkvisitors.com/visits"
+// The address for the Known Agents agent analytics API endpoint.
+const AnalyticsEndpoint = "https://api.knownagents.com/visits"
 
-// The address for the Dark Visitors robots.txt generation API endpoint.
-const RobotsTxtEndpoint = "https://api.darkvisitors.com/robots-txts"
+// The address for the Known Agents robots.txt generation API endpoint.
+const RobotsTxtEndpoint = "https://api.knownagents.com/robots-txts"
 
-// AgentTypes are groups of agent classified by the Dark Visitors API.
+// AgentTypes are groups of agent classified by the Known Agents API.
 type AgentType = string
 
 const (
@@ -45,7 +45,7 @@ const (
 	UndocumentedAIAgent  AgentType = "Undocumented AI Agent"
 )
 
-// allAgentTypes is a list of all documented Dark Visitors agent types.
+// allAgentTypes is a list of all documented Known Agents agent types.
 var allAgentTypes = []AgentType{
 	AIAssistant,
 	AIDataScraper,
@@ -63,28 +63,28 @@ var allAgentTypes = []AgentType{
 }
 
 func init() {
-	caddy.RegisterModule(Darkvisitors{})
-	httpcaddyfile.RegisterHandlerDirective("darkvisitors", parseCaddyfile)
-	httpcaddyfile.RegisterDirectiveOrder("darkvisitors", httpcaddyfile.Before, "header")
+	caddy.RegisterModule(Knownagents{})
+	httpcaddyfile.RegisterHandlerDirective("knownagents", parseCaddyfile)
+	httpcaddyfile.RegisterDirectiveOrder("knownagents", httpcaddyfile.Before, "header")
 }
 
-// Darkvisitors is a middleware which implements a HTTP handler that sends
-// HTTP request information as visit events to the Dark Visitors API.
+// Knownagents is a middleware which implements a HTTP handler that sends
+// HTTP request information as visit events to the Known Agents API.
 //
 // Its API is still experimental and may be subject to change.
-type Darkvisitors struct {
-	// The access token used to authenticate to the Dark Visitors agent
+type Knownagents struct {
+	// The access token used to authenticate to the Known Agents agent
 	// analytics API endpoint.
 	AccessToken string `json:"access_token"`
 
 	// Enables generation of robots.txt derived from agent analytics data using
-	// the Dark Visitors robots.txt generation API endpoint.
+	// the Known Agents robots.txt generation API endpoint.
 	RobotsTxt *RobotsTxt `json:"robots_txt,omitempty"`
 
 	logger *zap.Logger
 }
 
-// RobotsTxt configures automated generation of robots.txt via the Dark Visitors API.
+// RobotsTxt configures automated generation of robots.txt via the Known Agents API.
 type RobotsTxt struct {
 	// A list of agent types to block.
 	AgentTypes []AgentType `json:"agent_types"`
@@ -96,16 +96,16 @@ type RobotsTxt struct {
 }
 
 // CaddyModule returns the Caddy module information.
-func (Darkvisitors) CaddyModule() caddy.ModuleInfo {
+func (Knownagents) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
-		ID:  "http.handlers.darkvisitors",
-		New: func() caddy.Module { return new(Darkvisitors) },
+		ID:  "http.handlers.knownagents",
+		New: func() caddy.Module { return new(Knownagents) },
 	}
 }
 
-// FetchRobotsTxt queries the Dark Visitors robots.txt generation API endpoint
+// FetchRobotsTxt queries the Known Agents robots.txt generation API endpoint
 // and stores the returned robots.txt content.
-func (m *Darkvisitors) FetchRobotsTxt(ctx caddy.Context) error {
+func (m *Knownagents) FetchRobotsTxt(ctx caddy.Context) error {
 	m.logger.Info("Fetching generated robots.txt")
 
 	query, err := json.Marshal(m.RobotsTxt)
@@ -147,7 +147,7 @@ func (m *Darkvisitors) FetchRobotsTxt(ctx caddy.Context) error {
 }
 
 // Provision implements caddy.Provisioner.
-func (m *Darkvisitors) Provision(ctx caddy.Context) error {
+func (m *Knownagents) Provision(ctx caddy.Context) error {
 	repl := caddy.NewReplacer()
 
 	m.AccessToken = repl.ReplaceAll(m.AccessToken, "")
@@ -168,7 +168,7 @@ func (m *Darkvisitors) Provision(ctx caddy.Context) error {
 }
 
 // Validate implements caddy.Validator.
-func (m Darkvisitors) Validate() error {
+func (m Knownagents) Validate() error {
 	m.logger.Debug("Access Token: " + m.AccessToken)
 
 	if m.RobotsTxt != nil {
@@ -183,13 +183,13 @@ func (m Darkvisitors) Validate() error {
 		m.logger.Debug("Disallow: " + m.RobotsTxt.Disallow)
 	}
 
-	m.logger.Info("Darkvisitors middleware validated")
+	m.logger.Info("Knownagents middleware validated")
 
 	return nil
 }
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
-func (m Darkvisitors) ServeHTTP(
+func (m Knownagents) ServeHTTP(
 	w http.ResponseWriter,
 	r *http.Request,
 	next caddyhttp.Handler,
@@ -247,7 +247,7 @@ func (m Darkvisitors) ServeHTTP(
 }
 
 // UnmarshalCaddyfile implements caddyfile.Unmarshaler.
-func (m *Darkvisitors) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
+func (m *Knownagents) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	d.Next() // consume directive name
 
 	for nesting := d.Nesting(); d.NextBlock(nesting); {
@@ -311,15 +311,15 @@ func (m *Darkvisitors) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	return nil
 }
 
-// parseCaddyfile unmarshals tokens from h into a new Darkvisitors middleware.
+// parseCaddyfile unmarshals tokens from h into a new Knownagents middleware.
 //
 // Syntax:
 //
-//	darkvisitors {
+//	knownagents {
 //	  access_token <token>
 //	}
 func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error) {
-	var m Darkvisitors
+	var m Knownagents
 	err := m.UnmarshalCaddyfile(h.Dispenser)
 	if err != nil {
 		return nil, err
@@ -329,8 +329,8 @@ func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error)
 
 // Interface guards
 var (
-	_ caddy.Provisioner           = (*Darkvisitors)(nil)
-	_ caddy.Validator             = (*Darkvisitors)(nil)
-	_ caddyhttp.MiddlewareHandler = (*Darkvisitors)(nil)
-	_ caddyfile.Unmarshaler       = (*Darkvisitors)(nil)
+	_ caddy.Provisioner           = (*Knownagents)(nil)
+	_ caddy.Validator             = (*Knownagents)(nil)
+	_ caddyhttp.MiddlewareHandler = (*Knownagents)(nil)
+	_ caddyfile.Unmarshaler       = (*Knownagents)(nil)
 )

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 polykernel
 // SPDX-License-Identifier: MIT or Apache-2.0
 
-package caddydarkvisitors
+package caddyknownagents
 
 import (
 	"fmt"
@@ -15,12 +15,12 @@ import (
 func TestUnmarshalModule(t *testing.T) {
 	fmt.Println("Testing unmarshal module... ")
 	access_token := "aHVudGVyMg=="
-	config := fmt.Sprintf(`darkvisitors {
+	config := fmt.Sprintf(`knownagents {
 		access_token %s
 	}`, access_token)
 
 	dispenser := caddyfile.NewTestDispenser(config)
-	m := &Darkvisitors{}
+	m := &Knownagents{}
 
 	err := m.UnmarshalCaddyfile(dispenser)
 	if err != nil {
@@ -49,7 +49,7 @@ func TestUnmarshalModuleRobotsTxt(t *testing.T) {
 		agent_types_str = b.String()
 	}
 	disallow := "/"
-	config := fmt.Sprintf(`darkvisitors {
+	config := fmt.Sprintf(`knownagents {
 		access_token %s
 		robots_txt {
 			agent_types %s
@@ -58,7 +58,7 @@ func TestUnmarshalModuleRobotsTxt(t *testing.T) {
 	}`, access_token, agent_types_str, disallow)
 
 	dispenser := caddyfile.NewTestDispenser(config)
-	m := &Darkvisitors{}
+	m := &Knownagents{}
 
 	err := m.UnmarshalCaddyfile(dispenser)
 	if err != nil {
@@ -103,7 +103,7 @@ func TestUnmarshalModuleRobotsTxtWildcard(t *testing.T) {
 	fmt.Println("Testing unmarshal module (robots.txt block + wildcard)... ")
 	access_token := "aHVudGVyMg=="
 	disallow := "/"
-	config := fmt.Sprintf(`darkvisitors {
+	config := fmt.Sprintf(`knownagents {
 		access_token %s
 		robots_txt {
 			agent_types *
@@ -112,7 +112,7 @@ func TestUnmarshalModuleRobotsTxtWildcard(t *testing.T) {
 	}`, access_token, disallow)
 
 	dispenser := caddyfile.NewTestDispenser(config)
-	m := &Darkvisitors{}
+	m := &Knownagents{}
 
 	err := m.UnmarshalCaddyfile(dispenser)
 	if err != nil {

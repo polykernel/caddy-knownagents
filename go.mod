@@ -1,4 +1,4 @@
-module github.com/polykernel/caddy-darkvisitors
+module github.com/polykernel/caddy-knownagents
 
 go 1.23.3
 
