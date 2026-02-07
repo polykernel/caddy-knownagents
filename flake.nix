@@ -37,15 +37,10 @@
           in
           {
             pre-commit.settings.hooks = {
-              treefmt = {
-                enable = true;
-                settings.formatters = [
-                  (buildWithSpecificGo pkgs.gofumpt)
-                  pkgs.nixfmt-rfc-style
-                  pkgs.toml-sort
-                ];
-              };
+              nixfmt.enable = true;
               typos.enable = true;
+              golangci-lint.enable = true;
+              gofmt.enable = true;
               reuse.enable = true;
             };
 
@@ -56,7 +51,6 @@
                 config.pre-commit.settings.package
 
                 goPackage
-                pkgs.golangci-lint
                 (buildWithSpecificGo pkgs.gotools)
                 (buildWithSpecificGo pkgs.xcaddy)
                 (buildWithSpecificGo pkgs.pkgsite)
