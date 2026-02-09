@@ -195,7 +195,7 @@ func (m Knownagents) ServeHTTP(
 	next caddyhttp.Handler,
 ) error {
 	if m.RobotsTxt != nil {
-		caddyhttp.SetVar(r.Context(), "dv_robots_txt", m.RobotsTxt.text)
+		caddyhttp.SetVar(r.Context(), "ka_robots_txt", m.RobotsTxt.text)
 	}
 
 	// run the next handler

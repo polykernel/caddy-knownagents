@@ -27,7 +27,7 @@ knownagents {
   - **agent_types** specifies a list of [agent types](https://knownagents.com/agents) to be blocked by the generated robots.txt. The special token "\*" is supported as an argument which resolves to all documented agent types. Note: when "\*" is passed, there must be no further arguments.
   - **disallow** specifies the path to disallow for the specified agent types. Default: `/`.
 
-If the `robots_txt` block is configured, then the special variable `http.vars.dv_robots_txt` in the HTTP request context will be set to the raw content of the robots.txt returned by the Known Agents API. Note: the robots.txt query is performed once during the provision phase of the module lifecycle and cached thereafter.
+If the `robots_txt` block is configured, then the special variable `http.vars.ka_robots_txt` in the HTTP request context will be set to the raw content of the robots.txt returned by the Known Agents API. Note: the robots.txt query is performed once during the provision phase of the module lifecycle and cached thereafter.
 
 By default, the `knownagents` directive is ordered before [`header`](https://caddyserver.com/docs/caddyfile/directives#directive-header) in the Caddyfile. This ensures that the raw request content (sensitive data such as cookies are still stripped) is used to build a visit event. If this order does not fit your needs, you can change the order using the global [`order`](https://caddyserver.com/docs/caddyfile/directives#directive-order) directive. For example:
 
